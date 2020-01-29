@@ -1,8 +1,9 @@
-有限状态机（简称状态机,表示“有限个“状态以及在这些状态之间进行转换 Transation 和动作 Action 等行为的数学模型） arduino 库
+# 有限状态机（简称状态机,表示“有限个“状态以及在这些状态之间进行转换 Transation 和动作 Action 等行为的数学模型） arduino 库
 
 # 文档
 
 状态机的英文讲解：https://en.wikipedia.org/wiki/Finite-state_machine
+
 状态机的中文讲解：https://www.jianshu.com/p/7690b207ae92
 
 # 设计
@@ -77,6 +78,142 @@ Fsm：表示状态机。添加转换使用 add_transition 函数。此函数接�
 
 
     fsm.trigger(FLIP_LIGHT_SWITCH); // 触发 FLIP_LIGHT_SWITCH 事件
+
+# 示例
+
+Arduino 使用状态机的多任务系统
+Beginner Arduino 程序初学者往往聚焦于单个目标，比如点亮并闪烁LED或者让伺服电机旋转，一般使用延时来控制时间，如下例： 
+
+
+    void setup() {
+      pinMode(13, OUTPUT);
+    }
+
+    void loop() {
+      digitalWrite(13, HIGH);
+      delay(1000);
+      digitalWrite(13, LOW);
+      delay(1000);
+    }
+
+这种点亮并闪烁LED的单任务会很好工作。然而延时影响了多个任务同时运行，我们可以添加另一个LED让它与现有的LED一起闪烁...
+
+
+    void setup() {
+      pinMode(13, OUTPUT);
+      pinMode(12, OUTPUT);
+    }
+
+    void loop() {
+      digitalWrite(13, HIGH);
+      digitalWrite(12, HIGH);
+      delay(1000);
+      digitalWrite(13, LOW);
+      digitalWrite(12, LOW);
+      delay(1000);
+    }
+
+...但是如果我们想让新添加的LED以不同的频率闪烁，我们会发现延时暂停了程序，阻止了其它任务运行。比如读取传感器数据、数学运算、引脚操作等在延时期间事实上都被挂起了。
+
+毫秒级的多任务处理
+millis 返回当前程序在Arduino 板开始运行以来的毫秒时间，当 LED 切换到 ON ，当前毫秒时间被存储，随着程序运行，当前时间与 LED ON 的时间差和预定义的时间间隔比较后，LED可以被关闭。下面是官方演示实例：
+
+
+    const int ledPin =  13;
+    int ledState = LOW;
+
+    unsigned long previousMillis = 0;
+    const long interval = 1000;
+
+    void setup() {
+      pinMode(ledPin, OUTPUT);
+    }
+
+    void loop() {
+      // check to see if it's time to blink the LED; that is, if the
+      // difference between the current time and last time you blinked
+      // the LED is bigger than the interval at which you want to
+      // blink the LED.
+      unsigned long currentMillis = millis();
+
+      if (currentMillis - previousMillis >= interval) {
+        // save the last time you blinked the LED
+        previousMillis = currentMillis;
+
+        // if the LED is off turn it on and vice-versa:
+        if (ledState == LOW) {
+          ledState = HIGH;
+        } else {
+          ledState = LOW;
+        }
+
+        digitalWrite(ledPin, ledState);
+      }
+    }
+
+对于闪烁 LED 来说，跟踪时间并且引入多任务状态会让工作变得很好。
+
+使用有限状态机
+它是一个概括一个机器状态的计算模型，可以引入进来使得机器从一种状态到另一种状态，但机器在同一时间只能有一种状态。
+
+如果我们假设你程序中的每个任务代表一种机器状态，我们可以使用状态机来为我们管理转换。我们的程序中闪烁两个 LED ，我们需要两个状态机，每个状态机有两种状态：一个 LED ON ，一个 LED OFF。
+
+Arduino-fsm 库支持定时转换，不需要自己管理时序，下面是arduino-fsm 和 add_timed_transition 方法的应用实例： to include support for timed transitions, so you don't need to manage the timing yourself. Below is the code for blinking two LED's at different rates using arduino-fsm and the new add_timed_transition method.
+
+
+    #include <Fsm.h>
+
+    #define LED1_PIN 10
+    #define LED2_PIN 11
+
+    void on_led1_on_enter() {
+        digitalWrite(LED1_PIN, HIGH);
+    }
+
+    void on_led1_off_enter() {
+        digitalWrite(LED1_PIN, LOW);
+    }
+
+    void on_led2_on_enter() {
+        digitalWrite(LED2_PIN, HIGH);
+    }
+
+    void on_led2_off_enter() {
+        digitalWrite(LED2_PIN, LOW);
+    }
+
+    State state_led1_on(&on_led1_on_enter, NULL);
+    State state_led1_off(&on_led1_off_enter, NULL);
+
+    State state_led2_on(&on_led2_on_enter, NULL);
+    State state_led2_off(&on_led2_off_enter, NULL);
+
+    Fsm fsm_led1(&state_led1_off);
+    Fsm fsm_led2(&state_led2_off);
+
+    void setup() {
+        pinMode(LED1_PIN, OUTPUT);
+        pinMode(LED2_PIN, OUTPUT);
+
+        fsm_led1.add_timed_transition(&state_led1_off, &state_led1_on, 1000, NULL);
+        fsm_led1.add_timed_transition(&state_led1_on, &state_led1_off, 3000, NULL);
+        fsm_led2.add_timed_transition(&state_led2_off, &state_led2_on, 1000, NULL);
+        fsm_led2.add_timed_transition(&state_led2_on, &state_led2_off, 2000, NULL);
+    }
+
+    void loop() {
+        fsm_led1.check_timer();
+        fsm_led2.check_timer();
+    }
+
+这个例子中有两个状态机对应每一个LED，添加了下面的定时转换：
+
+一个转换： LED1 off 到 LED1 on 在 1s 之后；
+一个转换： LED1 on 到 LED1 off 在 3s 之后；
+一个转换： LED2 off 到 LED2 on 在 1s 之后；
+一个转换： LED2 on 到 LED2 off 在 2s 之后；
+两个状态机都开始于 LED off 状态。程序段 loop 针对每一个状态机调用 check_timer 函数检查所有的延时转换，如果间隔到了就执行转换。
+
 
 详见示例及下面链接：
 
