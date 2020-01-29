@@ -1,9 +1,8 @@
-An arduino library for implementing a finite state machine.
+有限状态机 arduino 库
 
-# Documentation
+# 文档
 
-Other than the examples included in the library, the following pages might be
-useful to you:
+详见示例及下面链接：
 
 * [Humble Coder: Arduino finite state machine library][1]
 * [Humble Coder: Arduino multitasking using a finite state machine][2]
@@ -11,16 +10,16 @@ useful to you:
 [1]: http://www.humblecoder.com/arduino-finite-state-machine-library/
 [2]: http://www.humblecoder.com/arduino-multitasking-using-finite-state-machines/
 
-# Contribution
+# 贡献
 
 If you'd like to contribute to `arduino-fsm` please submit a pull-request on a
 feature branch.
 
-# Donate
+# 捐献
 
 * Bitcoin: 1HnqohdK1d6gwDc7bT6LPPkmUFAXczEJKp
 
-# Changelog
+# 更新日志
 
 **2.2.0 - 25/10/2017**
 
