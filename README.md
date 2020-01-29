@@ -1,4 +1,6 @@
-# 有限状态机（简称状态机,表示“有限个“状态以及在这些状态之间进行转换 Transation 和动作 Action 等行为的数学模型） arduino 库
+# 有限状态机 arduino 库
+
+简称状态机,表示“有限个“状态以及在这些状态之间进行转换 Transation 和动作 Action 等行为的数学模型
 
 # 文档
 
@@ -158,7 +160,7 @@ millis 返回当前程序在Arduino 板开始运行以来的毫秒时间，当 L
 
 如果我们假设你程序中的每个任务代表一种机器状态，我们可以使用状态机来为我们管理转换。我们的程序中闪烁两个 LED ，我们需要两个状态机，每个状态机有两种状态：一个 LED ON ，一个 LED OFF。
 
-Arduino-fsm 库支持定时转换，不需要自己管理时序，下面是arduino-fsm 和 add_timed_transition 方法的应用实例： to include support for timed transitions, so you don't need to manage the timing yourself. Below is the code for blinking two LED's at different rates using arduino-fsm and the new add_timed_transition method.
+Arduino-fsm 库支持定时转换，不需要自己管理时序，下面是arduino-fsm 和 add_timed_transition 方法的应用实例：
 
 
     #include <Fsm.h>
